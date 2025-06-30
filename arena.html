@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Kode - CodeCamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar-sticky"><div class="container mx-auto px-6 py-2 flex justify-between items-center"><a href="index.html" class="text-2xl font-extrabold text-slate-900 border-2 border-slate-900 px-3 py-1">CodeCamp</a><div id="desktop-nav-links" class="hidden md:flex items-center font-bold"></div></div></nav>
+    <main id="main-content" class="container mx-auto px-6 py-12">
+        <button id="backToCourseBtn" class="neo-button secondary mb-8 inline-block">&larr; Kembali ke Detail Kursus</button>
+        <h1 id="arena-exercise-title" class="text-4xl font-extrabold text-slate-900 mb-2">Memuat Latihan...</h1>
+        <p id="arena-course-title" class="text-slate-600 mb-8 font-bold uppercase">Kursus: ...</p>
+        <div class="grid lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1"><div class="neo-card p-6"><h2 class="text-2xl font-bold mb-4 inline-block bg-yellow-400 border-2 border-slate-900 px-4 py-1">Instruksi</h2><div class="text-slate-700 space-y-3 leading-relaxed"><p><strong>Tugas:</strong> Buatlah sebuah fungsi JavaScript bernama `sapaPengguna` yang menerima satu argumen berupa nama (string) dan mengembalikan string sapaan, contoh: "Halo, [nama]!".</p><p><strong>Contoh Kode:</strong></p><pre class="bg-slate-200 p-3 border-2 border-slate-900 text-sm"><code>function sapaPengguna(nama) {\n  // Tulis kodemu di sini\n  return "Halo, " + nama + "!";\n}</code></pre></div></div></div>
+            <div class="lg:col-span-2"><div class="neo-card p-6"><h2 class="text-2xl font-bold mb-4 inline-block bg-yellow-400 border-2 border-slate-900 px-4 py-1">Editor Kode</h2><textarea id="codeEditor" class="neo-textarea h-64 font-mono text-sm" placeholder="function sapaPengguna(nama) { ... }"></textarea><div class="mt-6 flex space-x-4"><button id="submitCodeBtn" class="neo-button">Kumpulkan Jawaban</button></div><div class="mt-6"><h3 class="text-xl font-bold mb-2">Output Simulasi</h3><pre id="outputArea" class="bg-slate-800 text-slate-400 p-4 border-2 border-slate-900 h-32 overflow-y-auto text-sm font-mono">Output akan ditampilkan di sini...</pre></div></div></div>
+        </div>
+    </main>
+    <footer class="bg-yellow-400 text-slate-900 py-6 mt-12 border-t-2 border-slate-900"><div class="container mx-auto px-6 text-center font-bold"><p>&copy; 2025 CodeCamp. Keep Coding.</p></div></footer>
+    <div id="messageModal" class="modal"><div class="modal-content text-center"><span class="close-button" onclick="closeModal('messageModal')">&times;</span><h3 id="messageModalTitle" class="text-2xl font-bold mb-3">Pesan</h3><p id="messageModalText" class="text-slate-700"></p><button onclick="closeModal('messageModal')" class="mt-6 neo-button secondary">Tutup</button></div></div>
+    <script src="js/main.js"></script>
+</body>
+</html>
