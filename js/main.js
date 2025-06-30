@@ -1,9 +1,9 @@
 /**
  * CodeCamp - Main JavaScript File
- * FINAL VERSION - Integrated with Netlify Functions & Supabase
+ * FINAL VERSION - Fully integrated with Netlify Functions & Supabase
  */
 
-// Global data variables for static content
+// Global data variables, some static, some loaded from API
 let coursesData = {};
 let exercisesData = {};
 
@@ -41,6 +41,7 @@ async function updateUserProgress(email, courseId, points) {
     try {
         await fetch('/api/update-progress', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_email: email, course_id: courseId, points: points })
         });
     } catch(error) {
@@ -52,6 +53,7 @@ async function addUserActivity(email, activityText) {
     try {
         await fetch('/api/add-activity', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_email: email, text: activityText })
         });
     } catch(error) {
@@ -59,13 +61,25 @@ async function addUserActivity(email, activityText) {
     }
 }
 
+async function loadCoursesFromAPI() {
+    try {
+        const response = await fetch('/api/get-courses');
+        const courses = await response.json();
+        coursesData = courses.reduce((acc, course) => {
+            acc[course.course_id] = { ...course, id: course.course_id };
+            return acc;
+        }, {});
+    } catch (error) {
+        console.error("Gagal memuat data kursus:", error);
+        // Fallback to static data if API fails
+        coursesData = {
+            'python101': { id: 'python101', title: 'Dasar Pemrograman Python', level: 'Pemula', image: 'https://placehold.co/600x400/8B5CF6/FFFFFF?text=Python' },
+            'js101': { id: 'js101', title: 'JavaScript untuk Web Interaktif', level: 'Pemula - Menengah', image: 'https://placehold.co/600x400/EC4899/FFFFFF?text=JavaScript' }
+        };
+    }
+}
+
 function loadStaticData() {
-    // Data ini bisa juga diambil dari API jika ingin lebih dinamis
-    coursesData = {
-        'python101': { id: 'python101', title: 'Dasar Pemrograman Python', level: 'Pemula', image: 'https://placehold.co/600x400/8B5CF6/FFFFFF?text=Python' },
-        'js101': { id: 'js101', title: 'JavaScript untuk Web Interaktif', level: 'Pemula - Menengah', image: 'https://placehold.co/600x400/EC4899/FFFFFF?text=JavaScript' },
-        'java101': { id: 'java101', title: 'Pengantar Pemrograman Java', level: 'Pemula', image: 'https://placehold.co/600x400/F97316/FFFFFF?text=Java' }
-    };
     exercisesData = {
         'python101': [ { id: 'Latihan 1', title: 'Variabel & Tipe Data', points: 25 }, { id: 'Latihan 2', title: 'Fungsi', points: 35 }],
         'js101': [ { id: 'Latihan 1', title: 'DOM Manipulation', points: 30 }, { id: 'Latihan 2', title: 'Event Listeners', points: 30 }],
@@ -115,7 +129,7 @@ async function handleRegistration(event) {
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
     try {
-        const response = await fetch('/api/register', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+        const response = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, email, password }) });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         showMessageModal("Registrasi Berhasil", "Silakan login dengan akun Anda.");
@@ -131,7 +145,7 @@ async function handleLogin(event) {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     try {
-        const response = await fetch('/api/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+        const response = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email, password }) });
         const result = await response.json();
         if (!response.ok) throw new Error(result.message);
         setLoggedInUser(result.user);
@@ -155,8 +169,95 @@ async function submitCode(courseId, exerciseId, points) {
     showMessageModal("Berhasil!", `Jawaban Anda telah dikumpulkan. Anda mendapatkan ${points} poin!`);
     outputArea.textContent = `//-- Simulasi Sukses --//\n// Progres Anda telah diperbarui di database.`;
     outputArea.className = outputArea.className.replace(/text-(slate|red)-400/g, 'text-green-400');
-    document.getElementById('submitCodeBtn').disabled = true;
-    document.getElementById('submitCodeBtn').textContent = 'Telah Dikumpulkan';
+    const submitBtn = document.getElementById('submitCodeBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Telah Dikumpulkan';
+    submitBtn.className = 'bg-gray-400 cursor-not-allowed text-white p-3 font-bold';
+}
+
+
+// ===================================================
+// ADMIN PANEL FUNCTIONS (IMPLEMENTASI LENGKAP)
+// ===================================================
+
+async function loadAdminData() {
+    try {
+        const [usersResponse, coursesResponse] = await Promise.all([
+            fetch('/api/get-users'),
+            fetch('/api/get-courses')
+        ]);
+        if (!usersResponse.ok || !coursesResponse.ok) throw new Error('Gagal memuat data admin');
+        const users = await usersResponse.json();
+        const courses = await coursesResponse.json();
+        renderUsersTable(users);
+        renderCoursesTable(courses);
+        document.getElementById('add-course-form').addEventListener('submit', handleAddCourse);
+    } catch (error) {
+        console.error("Error memuat data admin:", error);
+        alert("Gagal memuat data dashboard admin.");
+    }
+}
+
+function renderUsersTable(users) {
+    const userTableBody = document.getElementById('user-table-body');
+    if (!userTableBody) return;
+    userTableBody.innerHTML = '';
+    users.forEach(user => {
+        userTableBody.innerHTML += `
+            <tr class="border-b border-slate-900"><td class="p-3">${user.name}</td><td class="p-3">${user.email}</td><td class="p-3">${user.role || 'user'}</td>
+            <td class="p-3"><button onclick="deleteUser('${user.email}')" class="text-red-600 hover:underline ${user.role === 'admin' ? 'hidden' : ''}">Hapus</button></td></tr>`;
+    });
+}
+
+function renderCoursesTable(courses) {
+    const courseTableBody = document.getElementById('course-table-body');
+    if (!courseTableBody) return;
+    courseTableBody.innerHTML = '';
+    courses.forEach(course => {
+        courseTableBody.innerHTML += `
+             <tr class="border-b border-slate-900"><td class="p-3">${course.course_id}</td><td class="p-3">${course.title}</td><td class="p-3">${course.level}</td>
+             <td class="p-3"><button onclick="deleteCourse('${course.course_id}')" class="text-red-600 hover:underline">Hapus</button></td></tr>`;
+    });
+}
+
+async function deleteUser(email) {
+    if (confirm(`Yakin ingin menghapus pengguna: ${email}?`)) {
+        try {
+            const response = await fetch('/api/delete-user', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email }) });
+            if (!response.ok) throw new Error('Gagal menghapus pengguna.');
+            alert('Pengguna berhasil dihapus.');
+            loadAdminData();
+        } catch (error) { alert(error.message); }
+    }
+}
+
+async function handleAddCourse(event) {
+    event.preventDefault();
+    const courseData = {
+        course_id: document.getElementById('courseId').value,
+        title: document.getElementById('courseTitle').value,
+        level: document.getElementById('courseLevel').value,
+        image: document.getElementById('courseImage').value || `https://placehold.co/600x400/cccccc/0F172A?text=${document.getElementById('courseId').value}`
+    };
+    if (!courseData.course_id || !courseData.title || !courseData.level) return alert("ID, Judul, dan Level harus diisi.");
+    try {
+        const response = await fetch('/api/add-course', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(courseData) });
+        if (!response.ok) throw new Error('Gagal menambah kursus.');
+        alert('Kursus berhasil ditambahkan!');
+        loadAdminData();
+        event.target.reset();
+    } catch(error) { alert(error.message); }
+}
+
+async function deleteCourse(course_id) {
+    if (confirm(`Yakin ingin menghapus kursus ID: ${course_id}?`)) {
+        try {
+            const response = await fetch('/api/delete-course', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ course_id }) });
+            if (!response.ok) throw new Error('Gagal menghapus kursus.');
+            alert('Kursus berhasil dihapus.');
+            loadAdminData();
+        } catch(error) { alert(error.message); }
+    }
 }
 
 
@@ -164,7 +265,6 @@ async function submitCode(courseId, exerciseId, points) {
 function renderCoursesPage() {
     const container = document.getElementById('main-content');
     if (!container) return;
-    
     let courseCardsHTML = '';
     for (const key in coursesData) {
         const course = coursesData[key];
@@ -174,8 +274,7 @@ function renderCoursesPage() {
                 <h3 class="text-2xl font-bold mb-2 flex-grow">${course.title}</h3>
                 <p class="text-slate-600 mb-4 font-bold uppercase text-sm">${course.level}</p>
                 <a href="kursus.html?id=${course.id}" class="neo-button mt-auto">Lihat Detail</a>
-            </div>
-        `;
+            </div>`;
     }
     container.innerHTML = `<h1 class="text-4xl font-extrabold text-slate-900 mb-8">Semua Kursus</h1><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">${courseCardsHTML}</div>`;
 }
@@ -207,10 +306,7 @@ async function renderProfilePage() {
     document.getElementById('profileName').textContent = user.name;
     document.getElementById('profileEmail').textContent = user.email;
 
-    const [progress, activities] = await Promise.all([
-        getUserProgress(user.email),
-        getUserActivity(user.email)
-    ]);
+    const [progress, activities] = await Promise.all([ getUserProgress(user.email), getUserActivity(user.email) ]);
     
     const progressContainer = document.getElementById('progress-container');
     progressContainer.innerHTML = '';
@@ -238,6 +334,7 @@ async function renderProfilePage() {
 function renderArenaPage(params) {
     const { courseId, exerciseId, points } = params;
     const course = coursesData[courseId];
+    if (!course) return document.getElementById('main-content').innerHTML = `<h1 class="text-4xl font-extrabold">Error: Kursus tidak valid.</h1>`;
     document.getElementById('arena-exercise-title').textContent = `${exerciseId}`;
     document.getElementById('arena-course-title').textContent = `Kursus: ${course.title}`;
     const backButton = document.getElementById('backToCourseBtn');
@@ -245,9 +342,11 @@ function renderArenaPage(params) {
     document.getElementById('submitCodeBtn').addEventListener('click', () => submitCode(courseId, exerciseId, points));
 }
 
+
 // --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
+async function initializeApp() {
     loadStaticData();
+    await loadCoursesFromAPI();
     updateUIForLoginState();
     
     document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
@@ -256,7 +355,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const path = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
 
-    if (path.endsWith('kursus.html')) {
+    if (path.endsWith('admin.html')) {
+        const user = getLoggedInUser();
+        if (!user || user.role !== 'admin') return window.location.href = 'index.html';
+        loadAdminData();
+    } else if (path.endsWith('kursus.html')) {
         params.has('id') ? renderCourseDetail(params.get('id')) : renderCoursesPage();
     } else if (path.endsWith('profil.html')) {
         renderProfilePage();
@@ -268,4 +371,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('main-content').innerHTML = `<h1 class="text-4xl font-extrabold">Error: Latihan tidak valid.</h1>`;
         }
     }
-});
+}
+
+document.addEventListener('DOMContentLoaded', initializeApp);
