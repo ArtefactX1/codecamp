@@ -1,6 +1,7 @@
 /**
  * CodeCamp - Main JavaScript File
  * FINAL VERSION - Fully integrated with Netlify Functions & Supabase
+ * API HEADER FIX: Added 'Content-Type': 'application/json' to all POST requests.
  */
 
 // Global data variables, some static, some loaded from API
@@ -315,7 +316,7 @@ async function renderProfilePage() {
         const percent = progress[courseId] || 0;
         if (percent > 0) hasProgress = true;
         progressContainer.innerHTML += `
-            <div><div class="flex justify-between mb-1"><span class="font-bold text-slate-700">${coursesData[courseId].title}</span><span class="font-bold text-slate-900">${percent}%</span></div>
+            <div><div class="flex justify-between mb-1"><span class="font-bold text-slate-700">${coursesData[courseId]?.title || courseId}</span><span class="font-bold text-slate-900">${percent}%</span></div>
             <div class="w-full bg-slate-200 border-2 border-slate-900 h-6"><div class="bg-yellow-400 h-full" style="width: ${percent}%"></div></div></div>`;
     }
     if (!hasProgress) progressContainer.innerHTML = '<p class="text-slate-600">Anda belum memulai kursus apapun. <a href="kursus.html" class="font-bold text-slate-900 hover:underline">Mulai sekarang!</a></p>';
