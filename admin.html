@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CodeCamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar-sticky">
+        <div class="container mx-auto px-6 py-2 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-extrabold text-slate-900 border-2 border-slate-900 px-3 py-1">CodeCamp - ADMIN</a>
+            <div id="desktop-nav-links" class="hidden md:flex items-center font-bold">
+                <!-- Links inserted by JS -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content for Admin Panel -->
+    <main class="container mx-auto px-6 py-12">
+        <div class="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
+            <h1 class="text-4xl font-extrabold text-slate-900">Admin Dashboard</h1>
+            <!-- TOMBOL KEMBALI DITAMBAHKAN DI SINI -->
+            <a href="index.html" class="neo-button secondary">
+                &larr; Kembali ke Situs Utama
+            </a>
+        </div>
+
+        <!-- User Management -->
+        <section id="user-management" class="mb-12">
+            <!-- JUDUL DIPERBARUI DENGAN GAYA BARU -->
+            <h2 class="text-2xl font-bold mb-4 inline-block bg-yellow-400 border-2 border-slate-900 px-4 py-1">Manajemen Pengguna</h2>
+            <div class="neo-card p-1 overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-slate-900 text-white uppercase text-sm">
+                        <tr>
+                            <th class="text-left p-3">Nama</th>
+                            <th class="text-left p-3">Email</th>
+                            <th class="text-left p-3">Peran</th>
+                            <th class="text-left p-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <!-- User rows will be injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Course Management -->
+        <section id="course-management">
+             <!-- JUDUL DIPERBARUI DENGAN GAYA BARU -->
+            <h2 class="text-2xl font-bold mb-4 inline-block bg-yellow-400 border-2 border-slate-900 px-4 py-1">Manajemen Kursus</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="md:col-span-2">
+                    <div class="neo-card p-1 overflow-x-auto">
+                        <table class="w-full">
+                             <thead class="bg-slate-900 text-white uppercase text-sm">
+                                <tr>
+                                    <th class="text-left p-3">ID</th>
+                                    <th class="text-left p-3">Judul</th>
+                                    <th class="text-left p-3">Level</th>
+                                    <th class="text-left p-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="course-table-body">
+                                <!-- Course rows will be injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="md:col-span-1">
+                    <form id="add-course-form" class="neo-card p-6">
+                        <h3 class="text-xl font-bold mb-4">Tambah Kursus Baru</h3>
+                        <div class="mb-4">
+                            <label for="courseId" class="block text-sm font-bold uppercase mb-1">ID Kursus</label>
+                            <input type="text" id="courseId" class="neo-input" required placeholder="cth: python101">
+                        </div>
+                        <div class="mb-4">
+                            <label for="courseTitle" class="block text-sm font-bold uppercase mb-1">Judul Kursus</label>
+                            <input type="text" id="courseTitle" class="neo-input" required>
+                        </div>
+                         <div class="mb-4">
+                            <label for="courseLevel" class="block text-sm font-bold uppercase mb-1">Level</label>
+                            <input type="text" id="courseLevel" class="neo-input" required placeholder="Pemula">
+                        </div>
+                        <div class="mb-4">
+                            <label for="courseImage" class="block text-sm font-bold uppercase mb-1">URL Gambar (Opsional)</label>
+                            <input type="text" id="courseImage" class="neo-input">
+                        </div>
+                        <button type="submit" class="neo-button w-full">Tambah Kursus</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+     <footer class="bg-yellow-400 text-slate-900 py-6 mt-12 border-t-2 border-slate-900">
+        <div class="container mx-auto px-6 text-center font-bold">
+            <p>&copy; 2025 CodeCamp. Admin Area.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

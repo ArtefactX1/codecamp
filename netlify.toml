@@ -1,0 +1,12 @@
+# File: netlify.toml
+
+[build]
+  # Direktori tempat Netlify Functions berada
+  functions = "netlify/functions"
+
+# Aturan redirect untuk membuat URL API lebih bersih
+# Semua permintaan ke /api/* akan diarahkan ke Netlify Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

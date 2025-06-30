@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil - CodeCamp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar-sticky"><div class="container mx-auto px-6 py-2 flex justify-between items-center"><a href="index.html" class="text-2xl font-extrabold text-slate-900 border-2 border-slate-900 px-3 py-1">CodeCamp</a><div id="desktop-nav-links" class="hidden md:flex items-center font-bold"></div></div></nav>
+    
+    <main class="container mx-auto px-6 py-12">
+        <!-- Tampilan Profil Utama -->
+        <div id="profile-view">
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-8">Profil Saya</h1>
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Kolom Kiri: Info & Progres -->
+                <div class="lg:col-span-2 space-y-8">
+                    <div class="neo-card p-8">
+                        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-8">
+                            <img src="https://placehold.co/100x100/FBBF24/0F172A?text=U" alt="[Foto Profil]" class="w-24 h-24 border-2 border-slate-900">
+                            <div>
+                                <h2 id="profileName" class="text-3xl font-bold text-slate-800 text-center sm:text-left">Nama Pengguna</h2>
+                                <p id="profileEmail" class="text-slate-600 text-center sm:text-left">email@example.com</p>
+                            </div>
+                        </div>
+                        <button id="editProfileBtn" class="neo-button">Edit Profil</button>
+                    </div>
+                    <div class="neo-card p-8">
+                        <h3 class="text-2xl font-bold mb-4">Progres Belajar</h3>
+                        <div id="progress-container" class="space-y-6">
+                            <!-- Progress bars akan dimasukkan oleh JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Sertifikat & Aktivitas -->
+                <div class="lg:col-span-1 space-y-8">
+                    <div class="neo-card p-6">
+                        <h3 class="text-2xl font-bold mb-4">Sertifikat Saya</h3>
+                        <div id="certificate-container" class="space-y-3">
+                            <p class="text-slate-600 text-sm">Belum ada sertifikat yang diraih.</p>
+                            <!-- Contoh Sertifikat -->
+                            <!-- 
+                            <div class="flex items-center gap-3 p-2 border-2 border-slate-900">
+                                <img src="https://placehold.co/40x40/8B5CF6/FFFFFF?text=P" alt="[Ikon Python]">
+                                <span class="font-bold">Dasar Pemrograman Python</span>
+                            </div> 
+                            -->
+                        </div>
+                    </div>
+                    <div class="neo-card p-6">
+                        <h3 class="text-2xl font-bold mb-4">Aktivitas Terbaru</h3>
+                        <div id="activity-container" class="space-y-3">
+                             <p class="text-slate-600 text-sm">Belum ada aktivitas terbaru.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Edit Profil (Tersembunyi) -->
+        <div id="profile-edit" class="hidden">
+            <h1 class="text-4xl font-extrabold text-slate-900 mb-8">Edit Profil</h1>
+            <div class="neo-card p-8 max-w-lg mx-auto">
+                 <form id="editProfileForm">
+                    <div class="mb-4">
+                        <label for="editName" class="block text-sm font-bold uppercase mb-1">Nama Lengkap</label>
+                        <input type="text" id="editName" class="neo-input" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="editEmail" class="block text-sm font-bold uppercase mb-1">Email</label>
+                        <input type="email" id="editEmail" class="neo-input bg-slate-200" disabled>
+                    </div>
+                    <div class="flex gap-4">
+                        <button type="submit" class="neo-button w-full">Simpan Perubahan</button>
+                        <button type="button" id="cancelEditBtn" class="neo-button secondary w-full">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-yellow-400 text-slate-900 py-6 mt-12 border-t-2 border-slate-900"><div class="container mx-auto px-6 text-center font-bold"><p>&copy; 2025 CodeCamp. No-Nonsense Learning.</p></div></footer>
+    <div id="messageModal" class="modal"><div class="modal-content text-center"><span class="close-button" onclick="closeModal('messageModal')">&times;</span><h3 id="messageModalTitle" class="text-2xl font-bold mb-3">Pesan</h3><p id="messageModalText" class="text-slate-700"></p><button onclick="closeModal('messageModal')" class="mt-6 neo-button secondary">Tutup</button></div></div>
+    <script src="js/main.js"></script>
+</body>
+</html>
