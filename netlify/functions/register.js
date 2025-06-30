@@ -8,4 +8,4 @@ exports.handler = async function (event) {
         if (error) throw error;
         return { statusCode: 201, body: JSON.stringify({ message: 'Registrasi berhasil!' }) };
     } catch (error) { return { statusCode: 500, body: JSON.stringify({ message: error.message }) }; }
-};  
+}; 
