@@ -4,6 +4,7 @@
  * - Fully integrated with Netlify Functions & Supabase Backend.
  * - Includes all Admin Panel CRUD functionalities (Users, Courses, Exercises).
  * - All pages (Home, Courses, Detail, Profile, Arena) are functional.
+ * - FIX: Added a null check in loadAdminData to prevent crashes.
  */
 
 // Global data variables, some static, some loaded from API
@@ -83,7 +84,6 @@ async function loadExercisesFromAPI(course_id) {
         const response = await fetch(`/api/get-exercises?course_id=${course_id}`);
         if (!response.ok) return [];
         const exercises = await response.json();
-        // Simpan data latihan yang diambil ke variabel global agar bisa diakses di halaman detail
         exercisesData[course_id] = exercises;
         return exercises;
     } catch (error) {
@@ -192,15 +192,25 @@ async function loadAdminData() {
             fetch('/api/get-users'),
             fetch('/api/get-courses')
         ]);
-        if (!usersResponse.ok || !coursesResponse.ok) throw new Error('Gagal memuat data admin');
+        if (!usersResponse.ok || !coursesResponse.ok) throw new Error('Gagal memuat data admin dari API');
         const users = await usersResponse.json();
         const courses = await coursesResponse.json();
+        
         renderUsersTable(users);
         renderCoursesTable(courses);
-        document.getElementById('add-course-form').addEventListener('submit', handleAddCourse);
+        
+        // --- PERBAIKAN DI SINI ---
+        const addCourseForm = document.getElementById('add-course-form');
+        if (addCourseForm) {
+            addCourseForm.addEventListener('submit', handleAddCourse);
+        } else {
+            console.error("Elemen form 'add-course-form' tidak ditemukan.");
+        }
+        // --- AKHIR PERBAIKAN ---
+
     } catch (error) {
-        console.error("Error memuat data admin:", error);
-        alert("Gagal memuat data dashboard admin.");
+        console.error("Error di loadAdminData:", error);
+        alert("Gagal memuat data dashboard admin. Periksa log konsol untuk detail.");
     }
 }
 
@@ -351,7 +361,7 @@ async function deleteExercise(id, course_id) {
 
 
 // --- PAGE RENDERERS ---
-function renderCoursesPage() {
+async function renderCoursesPage() {
     const container = document.getElementById('main-content');
     if (!container) return;
     let courseCardsHTML = '';
@@ -374,7 +384,6 @@ async function renderCourseDetail(courseId) {
     const course = coursesData[courseId];
     if (!course) return container.innerHTML = `<h1 class="text-4xl font-extrabold text-slate-900">404 - Kursus Tidak Ditemukan</h1>`;
     
-    // Muat latihan untuk kursus ini
     const courseExercises = await loadExercisesFromAPI(courseId);
 
     let exercisesHTML = courseExercises.map(ex => `
