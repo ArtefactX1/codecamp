@@ -7,11 +7,11 @@
  * - Uses Event Delegation for robust Admin Panel actions.
  */
 
-// Global data variables, loaded from API or static
+// Global data variables, some static, some loaded from API
 let coursesData = {};
 let exercisesData = {};
 
-// --- CORE AUTH & SESSION FUNCTIONS ---
+// --- CORE FUNCTIONS (API-driven) ---
 function getLoggedInUser() { return JSON.parse(sessionStorage.getItem('currentUser')) || null; }
 function setLoggedInUser(user) { sessionStorage.setItem('currentUser', JSON.stringify(user)); }
 function logoutUser() {
@@ -19,7 +19,6 @@ function logoutUser() {
     window.location.href = 'index.html';
 }
 
-// --- CORE API FETCHER ---
 async function fetchAPI(endpoint, options = {}) {
     try {
         const response = await fetch(`/api/${endpoint}`, options);
@@ -36,7 +35,6 @@ async function fetchAPI(endpoint, options = {}) {
     }
 }
 
-// --- DATA LOADING FUNCTIONS ---
 async function loadCoursesFromAPI() {
     try {
         const courses = await fetchAPI('get-courses');
@@ -62,18 +60,57 @@ async function loadExercisesFromAPI(course_id) {
     }
 }
 
+async function getUserProgress(email) {
+    try {
+        return await fetchAPI(`get-progress?email=${email}`);
+    } catch (error) {
+        console.error("Gagal mengambil progres:", error);
+        return {};
+    }
+}
+
+async function getUserActivity(email) {
+    try {
+        return await fetchAPI(`get-activity?email=${email}`);
+    } catch (error) {
+        console.error("Gagal mengambil aktivitas:", error);
+        return [];
+    }
+}
+
+async function updateUserProgress(email, courseId, points) {
+    try {
+        await fetchAPI('update-progress', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_email: email, course_id: courseId, points: points })
+        });
+    } catch(error) {
+        console.error("Gagal memperbarui progres:", error);
+    }
+}
+
+async function addUserActivity(email, activityText) {
+    try {
+        await fetchAPI('add-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_email: email, text: activityText })
+        });
+    } catch(error) {
+        console.error("Gagal menambah aktivitas:", error);
+    }
+}
+
 // --- UI & NAVIGATION ---
 function updateUIForLoginState() {
     const user = getLoggedInUser();
     const navContainer = document.getElementById('desktop-nav-links');
     if (!navContainer) return;
-
     let navLinks = `<a href="index.html" class="px-4 py-2 hover:bg-yellow-300">Beranda</a><a href="kursus.html" class="px-4 py-2 hover:bg-yellow-300">Kursus</a>`;
     if (user) {
         navLinks += `<a href="profil.html" class="px-4 py-2 hover:bg-yellow-300">Profil</a>`;
-        if (user.role === 'admin') {
-            navLinks += `<a href="admin.html" class="px-4 py-2 bg-red-500 text-white font-bold hover:bg-red-600">Admin Panel</a>`;
-        }
+        if (user.role === 'admin') navLinks += `<a href="admin.html" class="px-4 py-2 bg-red-500 text-white font-bold hover:bg-red-600">Admin Panel</a>`;
         navLinks += `<button onclick="logoutUser()" class="ml-4 neo-button secondary">Logout</button>`;
     } else {
         navLinks += `<button onclick="openModal('loginModal')" class="ml-4 neo-button">Login</button>`;
@@ -85,11 +122,8 @@ function updateUIForLoginState() {
 function updateActiveNavLink() {
     const currentPage = window.location.pathname.split('/').pop();
     document.querySelectorAll('#desktop-nav-links a').forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
-            link.classList.add('active-nav-link');
-        } else {
-            link.classList.remove('active-nav-link');
-        }
+        if (link.getAttribute('href') === currentPage) link.classList.add('active-nav-link');
+        else link.classList.remove('active-nav-link');
     });
 }
 
@@ -106,6 +140,7 @@ function showMessageModal(title, message) {
     }
 }
 
+
 // --- EVENT HANDLERS ---
 async function handleRegistration(event) {
     event.preventDefault();
@@ -117,9 +152,7 @@ async function handleRegistration(event) {
         showMessageModal("Registrasi Berhasil", "Silakan login dengan akun Anda.");
         closeModal('registrationModal');
         openModal('loginModal');
-    } catch (error) {
-        showMessageModal("Registrasi Gagal", error.message);
-    }
+    } catch (error) { showMessageModal("Registrasi Gagal", error.message); }
 }
 
 async function handleLogin(event) {
@@ -133,26 +166,25 @@ async function handleLogin(event) {
         updateUIForLoginState();
         showMessageModal("Login Berhasil", `Selamat datang kembali, ${result.user.name}!`);
         setTimeout(() => { window.location.href = result.user.role === 'admin' ? 'admin.html' : 'profil.html'; }, 1000);
-    } catch (error) {
-        showMessageModal("Login Gagal", error.message);
-    }
+    } catch (error) { showMessageModal("Login Gagal", error.message); }
 }
 
 async function submitCode(courseId, exerciseId, points) {
     const user = getLoggedInUser();
+    const outputArea = document.getElementById('outputArea');
     if (!user) return showMessageModal("Gagal", "Anda harus login untuk mengumpulkan jawaban.");
     
     try {
-        await fetchAPI('update-progress', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_email: user.email, course_id: courseId, points: points }) });
-        await fetchAPI('add-activity', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ user_email: user.email, text: `Menyelesaikan ${exerciseId} di kursus ${coursesData[courseId].title}` }) });
+        await updateUserProgress(user.email, courseId, points);
+        await addUserActivity(user.email, `Menyelesaikan ${exerciseId} di kursus ${coursesData[courseId].title}`);
         
         showMessageModal("Berhasil!", `Jawaban Anda telah dikumpulkan. Anda mendapatkan ${points} poin!`);
-        const outputArea = document.getElementById('outputArea');
         outputArea.textContent = `//-- Simulasi Sukses --//\n// Progres Anda telah diperbarui di database.`;
         outputArea.className = outputArea.className.replace(/text-(slate|red)-400/g, 'text-green-400');
         const submitBtn = document.getElementById('submitCodeBtn');
         submitBtn.disabled = true;
         submitBtn.textContent = 'Telah Dikumpulkan';
+        submitBtn.className = 'bg-gray-400 cursor-not-allowed text-white p-3 font-bold';
     } catch (error) {
         showMessageModal("Error", "Gagal menyimpan progres. Coba lagi nanti.");
     }
@@ -161,6 +193,20 @@ async function submitCode(courseId, exerciseId, points) {
 // ===================================================
 // ADMIN PANEL FUNCTIONS
 // ===================================================
+
+async function handleAdminActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+
+    const action = button.dataset.action;
+    const courseId = button.dataset.courseId;
+    const email = button.dataset.email;
+
+    if (action === 'delete-user') deleteUser(email);
+    else if (action === 'manage-exercises') openExerciseManager(courseId);
+    else if (action === 'edit-course') openEditCourseModal(courseId);
+    else if (action === 'delete-course') deleteCourse(courseId);
+}
 
 async function loadAdminData() {
     try {
@@ -195,20 +241,6 @@ function renderCoursesTable(courses) {
              <tr class="border-b border-slate-900"><td class="p-3 font-mono">${course.course_id}</td><td class="p-3 font-bold">${course.title}</td>
              <td class="p-3 whitespace-nowrap"><button data-action="manage-exercises" data-course-id="${course.course_id}" class="text-green-600 hover:underline mr-4">Kelola Latihan</button><button data-action="edit-course" data-course-id="${course.course_id}" class="text-blue-600 hover:underline mr-4">Edit</button><button data-action="delete-course" data-course-id="${course.course_id}" class="text-red-600 hover:underline">Hapus</button></td></tr>`;
     });
-}
-
-async function handleAdminActions(event) {
-    const button = event.target.closest('button[data-action]');
-    if (!button) return;
-
-    const action = button.dataset.action;
-    const courseId = button.dataset.courseId;
-    const email = button.dataset.email;
-
-    if (action === 'delete-user') deleteUser(email);
-    else if (action === 'manage-exercises') openExerciseManager(courseId);
-    else if (action === 'edit-course') openEditCourseModal(courseId);
-    else if (action === 'delete-course') deleteCourse(courseId);
 }
 
 async function handleAddCourse(event) {
@@ -404,12 +436,12 @@ async function initializeApp() {
     await loadCoursesFromAPI();
     updateUIForLoginState();
     
+    const path = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    
     document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
     document.getElementById('registrationForm')?.addEventListener('submit', handleRegistration);
     
-    const path = window.location.pathname;
-    const params = new URLSearchParams(window.location.search);
-
     if (path.endsWith('admin.html')) {
         const user = getLoggedInUser();
         if (!user || user.role !== 'admin') return window.location.href = 'index.html';
