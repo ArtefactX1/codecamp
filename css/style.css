@@ -1,40 +1,29 @@
 /* Import Font */
-@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;700;800&display=swap');
+@import url('[https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;700;800&display=swap](https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;700;800&display=swap)');
 
-html {
-    height: 100%;
-}
-
+html { height: 100%; }
 body {
     font-family: 'Lexend Deca', sans-serif;
-    background-color: #f5f5f5; /* Off-white background */
-    color: #0F172A; /* slate-900 for text */
+    background-color: #f5f5f5;
+    color: #0F172A;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
-
-main {
-    flex-grow: 1; 
-}
-
-/* === NEO-BRUTALISM COMPONENTS === */
-
+main { flex-grow: 1; }
 .neo-card {
     background-color: white;
     border: 2px solid #0F172A;
     box-shadow: 4px 4px 0px #0F172A;
     transition: all 0.2s ease-in-out;
 }
-
 .neo-card:hover {
-    box-shadow: 6px 6px 0px #FBBF24; /* Yellow accent on hover */
+    box-shadow: 6px 6px 0px #FBBF24;
     transform: translate(-2px, -2px);
 }
-
 .neo-button {
     display: inline-block;
-    background-color: #FBBF24; /* Yellow */
+    background-color: #FBBF24;
     color: #0F172A;
     border: 2px solid #0F172A;
     padding: 0.75rem 1.5rem;
@@ -43,36 +32,22 @@ main {
     box-shadow: 4px 4px 0px #0F172A;
     transition: all 0.1s ease-in-out;
     cursor: pointer;
-    text-decoration: none; /* For <a> tags styled as buttons */
+    text-decoration: none;
 }
-
 .neo-button:hover, .neo-button:focus {
     background-color: #0F172A;
     color: white;
     box-shadow: 4px 4px 0px #FBBF24;
     transform: translate(-2px, -2px);
 }
-
 .neo-button:active {
     box-shadow: 0px 0px 0px #0F172A;
     transform: translate(4px, 4px);
     transition: 0.05s;
 }
-
-.neo-button.secondary {
-    background-color: white;
-}
-.neo-button.secondary:hover {
-    background-color: #f5f5f5;
-    color: #0F172A;
-}
-
-.neo-button.secondary:active {
-    background-color: #e5e5e5;
-    color: #0F172A;
-}
-
-
+.neo-button.secondary { background-color: white; }
+.neo-button.secondary:hover { background-color: #f5f5f5; color: #0F172A; }
+.neo-button.secondary:active { background-color: #e5e5e5; color: #0F172A; }
 .neo-input, .neo-textarea {
     width: 100%;
     padding: 0.75rem 1rem;
@@ -85,47 +60,21 @@ main {
     outline: none;
     box-shadow: 0 0 0 3px #FBBF24;
 }
-
-/* Navbar */
-.navbar-sticky {
-    background-color: white;
-    border-bottom: 2px solid #0F172A;
-}
-.active-nav-link {
-    background-color: #FBBF24;
-    font-weight: 700;
-}
-
-/* Modal */
+.navbar-sticky { background-color: white; border-bottom: 2px solid #0F172A; }
+.active-nav-link { background-color: #FBBF24; font-weight: 700; }
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5);
-    align-items: center;
-    justify-content: center;
+    display: none; position: fixed; z-index: 100;
+    left: 0; top: 0; width: 100%; height: 100%;
+    overflow: auto; background-color: rgba(0,0,0,0.5);
+    align-items: center; justify-content: center;
 }
 .modal-content {
-    position: relative;
-    background-color: white;
-    padding: 2rem;
-    width: 90%;
-    max-width: 500px;
-    border: 2px solid #0F172A;
-    box-shadow: 6px 6px 0px #0F172A;
+    position: relative; background-color: white;
+    padding: 2rem; width: 90%; max-width: 500px;
+    border: 2px solid #0F172A; box-shadow: 6px 6px 0px #0F172A;
 }
-
 .close-button {
-    color: #0F172A;
-    position: absolute;
-    top: 0.5rem;
-    right: 1rem;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
+    color: #0F172A; position: absolute;
+    top: 0.5rem; right: 1rem;
+    font-size: 28px; font-weight: bold; cursor: pointer;
 }
