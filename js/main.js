@@ -1,7 +1,9 @@
 /**
  * CodeCamp - Main JavaScript File
- * FINAL VERSION - Fully integrated with Netlify Functions & Supabase
- * API HEADER FIX: Added 'Content-Type': 'application/json' to all POST requests.
+ * FINAL & COMPLETE VERSION
+ * - Fully integrated with Netlify Functions & Supabase Backend.
+ * - Includes all Admin Panel CRUD functionalities (Users & Courses).
+ * - All pages (Home, Courses, Detail, Profile, Arena) are functional.
  */
 
 // Global data variables, some static, some loaded from API
@@ -72,15 +74,12 @@ async function loadCoursesFromAPI() {
         }, {});
     } catch (error) {
         console.error("Gagal memuat data kursus:", error);
-        // Fallback to static data if API fails
-        coursesData = {
-            'python101': { id: 'python101', title: 'Dasar Pemrograman Python', level: 'Pemula', image: 'https://placehold.co/600x400/8B5CF6/FFFFFF?text=Python' },
-            'js101': { id: 'js101', title: 'JavaScript untuk Web Interaktif', level: 'Pemula - Menengah', image: 'https://placehold.co/600x400/EC4899/FFFFFF?text=JavaScript' }
-        };
+        coursesData = {}; // Kosongkan jika gagal
     }
 }
 
 function loadStaticData() {
+    // Data latihan ini bisa juga diambil dari API di masa depan
     exercisesData = {
         'python101': [ { id: 'Latihan 1', title: 'Variabel & Tipe Data', points: 25 }, { id: 'Latihan 2', title: 'Fungsi', points: 35 }],
         'js101': [ { id: 'Latihan 1', title: 'DOM Manipulation', points: 30 }, { id: 'Latihan 2', title: 'Event Listeners', points: 30 }],
@@ -178,7 +177,7 @@ async function submitCode(courseId, exerciseId, points) {
 
 
 // ===================================================
-// ADMIN PANEL FUNCTIONS (IMPLEMENTASI LENGKAP)
+// ADMIN PANEL FUNCTIONS
 // ===================================================
 
 async function loadAdminData() {
@@ -217,7 +216,7 @@ function renderCoursesTable(courses) {
     courses.forEach(course => {
         courseTableBody.innerHTML += `
              <tr class="border-b border-slate-900"><td class="p-3">${course.course_id}</td><td class="p-3">${course.title}</td><td class="p-3">${course.level}</td>
-             <td class="p-3"><button onclick="deleteCourse('${course.course_id}')" class="text-red-600 hover:underline">Hapus</button></td></tr>`;
+             <td class="p-3"><button onclick="openEditCourseModal('${course.course_id}')" class="text-blue-600 hover:underline mr-4">Edit</button><button onclick="deleteCourse('${course.course_id}')" class="text-red-600 hover:underline">Hapus</button></td></tr>`;
     });
 }
 
@@ -243,11 +242,12 @@ async function handleAddCourse(event) {
     if (!courseData.course_id || !courseData.title || !courseData.level) return alert("ID, Judul, dan Level harus diisi.");
     try {
         const response = await fetch('/api/add-course', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(courseData) });
-        if (!response.ok) throw new Error('Gagal menambah kursus.');
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Gagal menambah kursus.');
         alert('Kursus berhasil ditambahkan!');
         loadAdminData();
         event.target.reset();
-    } catch(error) { alert(error.message); }
+    } catch(error) { alert(`Error: ${error.message}`); }
 }
 
 async function deleteCourse(course_id) {
@@ -259,6 +259,37 @@ async function deleteCourse(course_id) {
             loadAdminData();
         } catch(error) { alert(error.message); }
     }
+}
+
+function openEditCourseModal(course_id) {
+    const course = Object.values(coursesData).find(c => c.id === course_id);
+    if (!course) return alert("Data kursus tidak ditemukan!");
+    document.getElementById('editCourseId').value = course.id;
+    document.getElementById('editCourseTitle').value = course.title;
+    document.getElementById('editCourseLevel').value = course.level;
+    document.getElementById('editCourseImage').value = course.image;
+    openModal('editCourseModal');
+    document.getElementById('editCourseForm').onsubmit = handleEditCourse;
+}
+
+async function handleEditCourse(event) {
+    event.preventDefault();
+    const courseData = {
+        course_id: document.getElementById('editCourseId').value,
+        title: document.getElementById('editCourseTitle').value,
+        level: document.getElementById('editCourseLevel').value,
+        image: document.getElementById('editCourseImage').value
+    };
+    try {
+        const response = await fetch('/api/edit-course', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(courseData) });
+        if (!response.ok) {
+            const result = await response.json();
+            throw new Error(result.message || 'Gagal memperbarui kursus.');
+        }
+        alert('Kursus berhasil diperbarui!');
+        closeModal('editCourseModal');
+        loadAdminData();
+    } catch(error) { alert(`Error: ${error.message}`); }
 }
 
 
