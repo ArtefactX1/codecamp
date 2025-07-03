@@ -1,6 +1,7 @@
 {
-  "name": "netlify",
+  "name": "codecamp",
   "version": "1.0.0",
+  "description": "CodeCamp E-Learning Platform",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -8,8 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "@supabase/supabase-js": "^2.50.2"
+    "@supabase/supabase-js": "^2.0.0"
   }
 }
