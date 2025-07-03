@@ -1,12 +1,10 @@
-// File: netlify/functions/get-exercises.js
-
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async function(event) {
-    // 1. Ambil course_id dari parameter URL
+    // Ambil course_id dari parameter URL, contoh: /api/get-exercises?course_id=python101
     const { course_id } = event.queryStringParameters;
     
-    // 2. Jika course_id tidak ada, kembalikan error
+    // Jika course_id tidak ada, kembalikan error
     if (!course_id) {
         return { 
             statusCode: 400, 
@@ -14,11 +12,10 @@ exports.handler = async function(event) {
         };
     }
     
-    // 3. Buat koneksi ke Supabase
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
     
     try {
-        // 4. Ambil semua latihan yang cocok dengan course_id
+        // Ambil semua latihan yang cocok dengan course_id dari tabel 'exercises'
         let { data, error } = await supabase
             .from('exercises')
             .select('*')
@@ -28,7 +25,7 @@ exports.handler = async function(event) {
             throw error; // Lemparkan error jika ada masalah database
         }
 
-        // 5. Kembalikan data latihan sebagai JSON
+        // Kembalikan data latihan sebagai JSON
         return { 
             statusCode: 200, 
             body: JSON.stringify(data) 
