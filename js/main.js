@@ -2,7 +2,7 @@
  * CodeCamp - Main JavaScript File
  * FINAL & COMPLETE VERSION
  * - Fully integrated with Netlify Functions & Supabase Backend.
- * - Includes all Admin Panel CRUD functionalities (Users & Courses).
+ * - Includes all Admin Panel CRUD functionalities (Users, Courses, Exercises).
  * - All pages (Home, Courses, Detail, Profile, Arena) are functional.
  */
 
@@ -78,14 +78,20 @@ async function loadCoursesFromAPI() {
     }
 }
 
-function loadStaticData() {
-    // Data latihan ini bisa juga diambil dari API di masa depan
-    exercisesData = {
-        'python101': [ { id: 'Latihan 1', title: 'Variabel & Tipe Data', points: 25 }, { id: 'Latihan 2', title: 'Fungsi', points: 35 }],
-        'js101': [ { id: 'Latihan 1', title: 'DOM Manipulation', points: 30 }, { id: 'Latihan 2', title: 'Event Listeners', points: 30 }],
-        'java101': [ { id: 'Latihan 1', title: 'Classes and Objects', points: 40 }]
-    };
+async function loadExercisesFromAPI(course_id) {
+    try {
+        const response = await fetch(`/api/get-exercises?course_id=${course_id}`);
+        if (!response.ok) return [];
+        const exercises = await response.json();
+        // Simpan data latihan yang diambil ke variabel global agar bisa diakses di halaman detail
+        exercisesData[course_id] = exercises;
+        return exercises;
+    } catch (error) {
+        console.error(`Gagal memuat latihan untuk ${course_id}:`, error);
+        return [];
+    }
 }
+
 
 // --- UI & NAVIGATION ---
 function updateUIForLoginState() {
@@ -215,8 +221,8 @@ function renderCoursesTable(courses) {
     courseTableBody.innerHTML = '';
     courses.forEach(course => {
         courseTableBody.innerHTML += `
-             <tr class="border-b border-slate-900"><td class="p-3">${course.course_id}</td><td class="p-3">${course.title}</td><td class="p-3">${course.level}</td>
-             <td class="p-3"><button onclick="openEditCourseModal('${course.course_id}')" class="text-blue-600 hover:underline mr-4">Edit</button><button onclick="deleteCourse('${course.course_id}')" class="text-red-600 hover:underline">Hapus</button></td></tr>`;
+             <tr class="border-b border-slate-900"><td class="p-3 font-mono">${course.course_id}</td><td class="p-3 font-bold">${course.title}</td>
+             <td class="p-3 whitespace-nowrap"><button onclick="openExerciseManager('${course.course_id}')" class="text-green-600 hover:underline mr-4">Kelola Latihan</button><button onclick="openEditCourseModal('${course.course_id}')" class="text-blue-600 hover:underline mr-4">Edit</button><button onclick="deleteCourse('${course.course_id}')" class="text-red-600 hover:underline">Hapus</button></td></tr>`;
     });
 }
 
@@ -292,6 +298,57 @@ async function handleEditCourse(event) {
     } catch(error) { alert(`Error: ${error.message}`); }
 }
 
+async function openExerciseManager(course_id) {
+    const course = coursesData[course_id];
+    if (!course) return alert("Kursus tidak ditemukan.");
+    document.getElementById('exerciseManagerCourseTitle').textContent = `Untuk Kursus: ${course.title}`;
+    document.getElementById('addExerciseCourseId').value = course_id;
+    openModal('exerciseManagerModal');
+    const container = document.getElementById('exercise-list-container');
+    container.innerHTML = '<p class="text-slate-500">Memuat...</p>';
+    try {
+        const exercises = await loadExercisesFromAPI(course_id);
+        container.innerHTML = '';
+        if (exercises.length === 0) {
+            container.innerHTML = '<p class="text-slate-500">Belum ada latihan untuk kursus ini.</p>';
+        } else {
+            exercises.forEach(ex => {
+                container.innerHTML += `<div class="flex justify-between items-center p-2 border-2 border-slate-900"><div><p class="font-bold">${ex.exercise_id}: ${ex.title}</p><p class="text-xs text-slate-500">${ex.points} Poin</p></div><button onclick="deleteExercise(${ex.id}, '${course_id}')" class="text-red-600 hover:underline text-sm">Hapus</button></div>`;
+            });
+        }
+    } catch (error) { container.innerHTML = '<p class="text-red-500">Gagal memuat latihan.</p>'; }
+    document.getElementById('add-exercise-form').onsubmit = handleAddExercise;
+}
+
+async function handleAddExercise(event) {
+    event.preventDefault();
+    const exerciseData = {
+        course_id: document.getElementById('addExerciseCourseId').value,
+        exercise_id: document.getElementById('exerciseId').value,
+        title: document.getElementById('exerciseTitle').value,
+        points: document.getElementById('exercisePoints').value
+    };
+    if (!exerciseData.course_id || !exerciseData.exercise_id || !exerciseData.title || !exerciseData.points) return alert("Semua field harus diisi.");
+    try {
+        const response = await fetch('/api/add-exercise', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(exerciseData) });
+        if (!response.ok) throw new Error('Gagal menambah latihan.');
+        alert('Latihan berhasil ditambahkan!');
+        openExerciseManager(exerciseData.course_id);
+        event.target.reset();
+    } catch(error) { alert(`Error: ${error.message}`); }
+}
+
+async function deleteExercise(id, course_id) {
+    if (confirm(`Yakin ingin menghapus latihan ini?`)) {
+        try {
+            const response = await fetch('/api/delete-exercise', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ id }) });
+            if (!response.ok) throw new Error('Gagal menghapus latihan.');
+            alert('Latihan berhasil dihapus.');
+            openExerciseManager(course_id);
+        } catch(error) { alert(`Error: ${error.message}`); }
+    }
+}
+
 
 // --- PAGE RENDERERS ---
 function renderCoursesPage() {
@@ -311,17 +368,22 @@ function renderCoursesPage() {
     container.innerHTML = `<h1 class="text-4xl font-extrabold text-slate-900 mb-8">Semua Kursus</h1><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">${courseCardsHTML}</div>`;
 }
 
-function renderCourseDetail(courseId) {
+async function renderCourseDetail(courseId) {
     const container = document.getElementById('main-content');
     if (!container) return;
     const course = coursesData[courseId];
     if (!course) return container.innerHTML = `<h1 class="text-4xl font-extrabold text-slate-900">404 - Kursus Tidak Ditemukan</h1>`;
-    let exercisesHTML = (exercisesData[courseId] || []).map(ex => `
+    
+    // Muat latihan untuk kursus ini
+    const courseExercises = await loadExercisesFromAPI(courseId);
+
+    let exercisesHTML = courseExercises.map(ex => `
         <div class="neo-card p-4 flex justify-between items-center">
-            <div><h4 class="font-bold text-lg">${ex.id}: ${ex.title}</h4><p class="text-sm text-slate-600">${ex.points} Poin</p></div>
-            <a href="arena.html?courseId=${course.id}&exerciseId=${ex.id}&points=${ex.points}" class="neo-button secondary">Mulai</a>
+            <div><h4 class="font-bold text-lg">${ex.exercise_id}: ${ex.title}</h4><p class="text-sm text-slate-600">${ex.points} Poin</p></div>
+            <a href="arena.html?courseId=${course.id}&exerciseId=${ex.exercise_id}&points=${ex.points}" class="neo-button secondary">Mulai</a>
         </div>`).join('');
-    if (!exercisesHTML) exercisesHTML = '<p>Belum ada latihan untuk kursus ini.</p>';
+    if (courseExercises.length === 0) exercisesHTML = '<p>Belum ada latihan untuk kursus ini.</p>';
+    
     container.innerHTML = `
         <a href="kursus.html" class="neo-button secondary mb-8 inline-block">&larr; Kembali ke Daftar Kursus</a>
         <div class="neo-card p-8"><img src="${course.image}" alt="Gambar Kursus ${course.title}" class="w-full h-64 object-cover mb-6 border-2 border-slate-900">
@@ -377,7 +439,6 @@ function renderArenaPage(params) {
 
 // --- INITIALIZATION ---
 async function initializeApp() {
-    loadStaticData();
     await loadCoursesFromAPI();
     updateUIForLoginState();
     
