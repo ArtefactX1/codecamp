@@ -7,7 +7,7 @@
  * - Uses Event Delegation for robust Admin Panel actions.
  */
 
-// Global data variables, some static, some loaded from API
+// Global data variables, loaded from API
 let coursesData = {};
 let exercisesData = {};
 
@@ -171,7 +171,6 @@ async function handleLogin(event) {
 
 async function submitCode(courseId, exerciseId, points) {
     const user = getLoggedInUser();
-    const outputArea = document.getElementById('outputArea');
     if (!user) return showMessageModal("Gagal", "Anda harus login untuk mengumpulkan jawaban.");
     
     try {
@@ -179,6 +178,7 @@ async function submitCode(courseId, exerciseId, points) {
         await addUserActivity(user.email, `Menyelesaikan ${exerciseId} di kursus ${coursesData[courseId].title}`);
         
         showMessageModal("Berhasil!", `Jawaban Anda telah dikumpulkan. Anda mendapatkan ${points} poin!`);
+        const outputArea = document.getElementById('outputArea');
         outputArea.textContent = `//-- Simulasi Sukses --//\n// Progres Anda telah diperbarui di database.`;
         outputArea.className = outputArea.className.replace(/text-(slate|red)-400/g, 'text-green-400');
         const submitBtn = document.getElementById('submitCodeBtn');
@@ -202,10 +202,15 @@ async function handleAdminActions(event) {
     const courseId = button.dataset.courseId;
     const email = button.dataset.email;
 
-    if (action === 'delete-user') deleteUser(email);
-    else if (action === 'manage-exercises') openExerciseManager(courseId);
-    else if (action === 'edit-course') openEditCourseModal(courseId);
-    else if (action === 'delete-course') deleteCourse(courseId);
+    if (action === 'delete-user') {
+        deleteUser(email);
+    } else if (action === 'manage-exercises') {
+        openExerciseManager(courseId);
+    } else if (action === 'edit-course') {
+        openEditCourseModal(courseId);
+    } else if (action === 'delete-course') {
+        deleteCourse(courseId);
+    }
 }
 
 async function loadAdminData() {
@@ -312,11 +317,21 @@ async function openExerciseManager(course_id) {
             container.innerHTML = '<p class="text-slate-500">Belum ada latihan untuk kursus ini.</p>';
         } else {
             exercises.forEach(ex => {
-                container.innerHTML += `<div class="flex justify-between items-center p-2 border-2 border-slate-900"><div><p class="font-bold">${ex.exercise_id}: ${ex.title}</p><p class="text-xs text-slate-500">${ex.points} Poin</p></div><button onclick="deleteExercise(${ex.id}, '${course_id}')" class="text-red-600 hover:underline text-sm">Hapus</button></div>`;
+                container.innerHTML += `<div class="flex justify-between items-center p-2 border-2 border-slate-900"><div><p class="font-bold">${ex.exercise_id}: ${ex.title}</p><p class="text-xs text-slate-500">${ex.points} Poin</p></div><button data-action="delete-exercise" data-id="${ex.id}" data-course-id="${course_id}" class="text-red-600 hover:underline text-sm">Hapus</button></div>`;
             });
         }
+        container.removeEventListener('click', handleExerciseActions); // Hapus listener lama untuk mencegah duplikasi
+        container.addEventListener('click', handleExerciseActions);
     } catch (error) { container.innerHTML = '<p class="text-red-500">Gagal memuat latihan.</p>'; }
     document.getElementById('add-exercise-form').onsubmit = handleAddExercise;
+}
+
+async function handleExerciseActions(event) {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    if (button.dataset.action === 'delete-exercise') {
+        deleteExercise(button.dataset.id, button.dataset.courseId);
+    }
 }
 
 async function handleAddExercise(event) {
@@ -347,21 +362,28 @@ async function deleteExercise(id, course_id) {
 }
 
 // --- PAGE RENDERERS ---
-function renderCoursesPage() {
+async function renderCoursesPage() {
     const container = document.getElementById('main-content');
     if (!container) return;
+    container.innerHTML = `<h1 class="text-4xl font-extrabold text-slate-900 mb-8">Semua Kursus</h1><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" id="course-list-container"></div>`;
+    const courseListContainer = document.getElementById('course-list-container');
+    
     let courseCardsHTML = '';
-    for (const key in coursesData) {
-        const course = coursesData[key];
-        courseCardsHTML += `
-            <div class="neo-card p-6 flex flex-col">
-                <img src="${course.image}" alt="Gambar Kursus ${course.title}" class="w-full h-40 object-cover mb-4 border-2 border-slate-900">
-                <h3 class="text-2xl font-bold mb-2 flex-grow">${course.title}</h3>
-                <p class="text-slate-600 mb-4 font-bold uppercase text-sm">${course.level}</p>
-                <a href="kursus.html?id=${course.id}" class="neo-button mt-auto">Lihat Detail</a>
-            </div>`;
+    if (Object.keys(coursesData).length === 0) {
+        courseCardsHTML = `<p class="col-span-full text-slate-600">Gagal memuat kursus atau belum ada kursus yang tersedia.</p>`;
+    } else {
+        for (const key in coursesData) {
+            const course = coursesData[key];
+            courseCardsHTML += `
+                <div class="neo-card p-6 flex flex-col">
+                    <img src="${course.image}" alt="Gambar Kursus ${course.title}" class="w-full h-40 object-cover mb-4 border-2 border-slate-900">
+                    <h3 class="text-2xl font-bold mb-2 flex-grow">${course.title}</h3>
+                    <p class="text-slate-600 mb-4 font-bold uppercase text-sm">${course.level}</p>
+                    <a href="kursus.html?id=${course.id}" class="neo-button mt-auto">Lihat Detail</a>
+                </div>`;
+        }
     }
-    container.innerHTML = `<h1 class="text-4xl font-extrabold text-slate-900 mb-8">Semua Kursus</h1><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">${courseCardsHTML}</div>`;
+    courseListContainer.innerHTML = courseCardsHTML;
 }
 
 async function renderCourseDetail(courseId) {
