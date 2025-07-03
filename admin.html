@@ -22,8 +22,19 @@
         <section id="user-management" class="mb-12">
             <h2 class="text-2xl font-bold mb-4 inline-block bg-yellow-400 border-2 border-slate-900 px-4 py-1">Manajemen Pengguna</h2>
             <div class="neo-card p-1 overflow-x-auto">
-                <!-- PERBAIKAN DI SINI: w-f menjadi w-full -->
-                <table class="w-full"><thead class="bg-slate-900 text-white uppercase text-sm"><tr><th class="text-left p-3">Nama</th><th class="text-left p-3">Email</th><th class="text-left p-3">Peran</th><th class="text-left p-3">Aksi</th></tr></thead><tbody id="user-table-body"></tbody></table>
+                <table class="w-full">
+                    <thead class="bg-slate-900 text-white uppercase text-sm">
+                        <tr>
+                            <th class="text-left p-3">Nama</th>
+                            <th class="text-left p-3">Email</th>
+                            <th class="text-left p-3">Peran</th>
+                            <th class="text-left p-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        <!-- Konten dirender oleh JS -->
+                    </tbody>
+                </table>
             </div>
         </section>
         <section id="course-management">
@@ -31,7 +42,18 @@
             <div class="grid md:grid-cols-3 gap-8">
                 <div class="md:col-span-2">
                     <div class="neo-card p-1 overflow-x-auto">
-                        <table class="w-full"><thead class="bg-slate-900 text-white uppercase text-sm"><tr><th class="text-left p-3">ID</th><th class="text-left p-3">Judul</th><th class="text-left p-3">Aksi</th></tr></thead><tbody id="course-table-body"></tbody></table>
+                        <table class="w-full">
+                            <thead class="bg-slate-900 text-white uppercase text-sm">
+                                <tr>
+                                    <th class="text-left p-3">ID</th>
+                                    <th class="text-left p-3">Judul</th>
+                                    <th class="text-left p-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="course-table-body">
+                                <!-- Konten dirender oleh JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 <div class="md:col-span-1">
